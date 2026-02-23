@@ -1,0 +1,66 @@
+{
+	"iwkits.apiPath" : "${workspaceFolder}/backend/src/IWKits.Api",
+
+	"files.exclude": {
+		"**/bin": true,
+		"**/obj": true,
+	},
+
+	"folder-color.pathColors": [
+		{
+			"folderPath": "IWKits\\.git\\",
+			"color": "foldercolorizer.color_993333",
+			"badge": "¤"
+		},
+		{
+			"folderPath": "IWKits\\.vscode\\",
+			"color": "foldercolorizer.color_336699",
+			"badge": "§"
+		},
+		{
+			"folderPath": "IWKits\\frontend\\",
+			"color": "foldercolorizer.color_00cc99",
+			"badge": "👁"
+		},
+		{
+			"folderPath": "IWKits\\backend\\",
+			"color": "foldercolorizer.color_339999",
+			"badge": "⚙"
+		},
+		{
+			"folderPath": "IWKits\\.gitattributes\\",
+			"badge": "↻",
+			"color": "foldercolorizer.color_993333"
+		},
+		{
+			"folderPath": "IWKits\\.gitignore\\",
+			"color": "foldercolorizer.color_993333",
+			"badge": "↻"
+		},
+		{
+			"folderPath": "IWKits\\.editorconfig\\",
+			"badge": "≡",
+			"color": "foldercolorizer.color_ccccff"
+		},
+		{
+			"folderPath": "IWKits\\.dockerignore\\",
+			"color": "foldercolorizer.color_006699",
+			"badge": "×"
+		},
+		{
+			"folderPath": "IWKits\\docker-compose.yaml\\",
+			"color": "foldercolorizer.color_006699",
+			"badge": "≈"
+		},
+		{
+			"folderPath": "IWKits\\IWKits.sln\\",
+			"color": "foldercolorizer.color_666699",
+			"badge": "↓"
+		},
+		{
+			"folderPath": "IWKits.Api.csproj\\",
+			"color": "foldercolorizer.color_cc9900",
+			"badge": "⋄"
+		}
+	]
+}

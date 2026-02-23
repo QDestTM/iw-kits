@@ -1,0 +1,41 @@
+# Logs ignores
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment ignores
+.env
+.env.*
+!.env.example
+
+# Node/Next.js ignores
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/.turbo/
+frontend/coverage/
+frontend/.eslintcache
+
+# Api ignores
+backend/**/bin/
+backend/**/obj/
+backend/**/TestResults/
+backend/**/*.user
+backend/**/*.suo
+backend/**/*.cache
+backend/**/*.pdb
+backend/.vs/
+
+# Docker ignores
+**/docker-compose.override.yml
+
+# Coverage ignores
+coverage/
+*.coverage
+*.coveragexml
+
+# Publish output
+publish/
