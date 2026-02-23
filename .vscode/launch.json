@@ -14,6 +14,10 @@
 			"preLaunchTask": "build-api",
 			"args": [],
 
+			"env" : {
+				"ASPNETCORE_ENVIRONMENT" : "Development"
+			},
+
 			"program": "${config:iwkits.apiPath}/bin/Debug/net10.0/IWKits.Api.dll",
 			"cwd": "${workspaceFolder}"
 		},
