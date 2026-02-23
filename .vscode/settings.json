@@ -58,6 +58,11 @@
 			"badge": "↓"
 		},
 		{
+			"folderPath": "IWKits\\.env\\",
+			"color": "foldercolorizer.color_cccc66",
+			"badge": "⌔"
+		},
+		{
 			"folderPath": "IWKits.Api.csproj\\",
 			"color": "foldercolorizer.color_cc9900",
 			"badge": "⋄"
