@@ -5,6 +5,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Obsidian ignores
+.obsidian/**
+
+# MongoDB ignores
+mongodb/**
+
 # Environment ignores
 .env
 .env.*
@@ -39,3 +45,6 @@ coverage/
 
 # Publish output
 publish/
+
+# Test-related files
+sample-input.csv

@@ -1,6 +1,9 @@
 {
 	"iwkits.apiPath" : "${workspaceFolder}/backend/src/IWKits.Api",
 
+	"iwkits.mdbPath" : "${workspaceFolder}/mongodb",
+	"iwkits.mdbPort" : "24000",
+
 	"files.exclude": {
 		"**/bin": true,
 		"**/obj": true,
@@ -18,6 +21,11 @@
 			"badge": "§"
 		},
 		{
+			"folderPath": "IWKits\\.obsidian\\",
+			"color": "foldercolorizer.color_6666cc",
+			"badge": "🗊"
+		},
+		{
 			"folderPath": "IWKits\\frontend\\",
 			"color": "foldercolorizer.color_00cc99",
 			"badge": "👁"
@@ -28,9 +36,19 @@
 			"badge": "⚙"
 		},
 		{
+			"folderPath": "IWKits.Api\\",
+			"color": "foldercolorizer.color_339999",
+			"badge": "⚙"
+		},
+		{
+			"folderPath": "IWKits\\mongodb\\",
+			"color": "foldercolorizer.color_336633",
+			"badge": "⊢"
+		},
+		{
 			"folderPath": "IWKits\\.gitattributes\\",
-			"badge": "↻",
-			"color": "foldercolorizer.color_993333"
+			"color": "foldercolorizer.color_993333",
+			"badge": "↻"
 		},
 		{
 			"folderPath": "IWKits\\.gitignore\\",
@@ -66,6 +84,11 @@
 			"folderPath": "IWKits.Api.csproj\\",
 			"color": "foldercolorizer.color_cc9900",
 			"badge": "⋄"
-		}
+		},
+		{
+			"folderPath": "IWKits.Api\\Dockerfile\\",
+			"color": "foldercolorizer.color_0099cc",
+			"badge": "☰"
+		},
 	]
 }
