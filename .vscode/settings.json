@@ -71,12 +71,12 @@
 			"badge": "≈"
 		},
 		{
-			"folderPath": "IWKits\\IWKits.sln\\",
+			"folderPath": "IWKits.sln\\",
 			"color": "foldercolorizer.color_666699",
 			"badge": "↓"
 		},
 		{
-			"folderPath": "IWKits\\.env\\",
+			"folderPath": ".env\\",
 			"color": "foldercolorizer.color_cccc66",
 			"badge": "⌔"
 		},
