@@ -1,0 +1,43 @@
+services:
+  application-api:
+    container_name: application-api
+    hostname: application-api
+
+    image: application-api:latest
+
+    env_file:
+      - .env
+    networks:
+      - application-network
+    depends_on:
+      - application-mdb
+    ports:
+      - "23000:8080"
+
+  application-mdb:
+    container_name: application-mdb
+    hostname: application-mdb
+
+    image: mongo:latest
+
+    networks:
+      - application-network
+    ports:
+      - "24000:27017"
+    volumes:
+      - "application-vol:/data/db"
+
+networks:
+  application-network:
+    name: application-network
+    driver: bridge
+
+volumes:
+  application-vol:
+    name: application-vol
+    driver: local
+
+    driver_opts:
+      type: none
+      device: ./mongo
+      o: bind
