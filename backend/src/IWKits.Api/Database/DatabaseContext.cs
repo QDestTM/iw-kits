@@ -1,16 +1,21 @@
-namespace IWKits.Api;
+namespace IWKits.Api.Database;
 
 // Namespaces used by this file
 using MongoDB.Driver;
 
 // Main content of the file
-public interface IMongoDBContext
+public abstract class DatabaseContext
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	IMongoCollection<OrderInfo> Orders { get; }
+	//! Private instance members
+	protected readonly IMongoDatabase database;
 
-	IMongoCollection<UserInfo>  Users  { get; }
+	// Public instance constructors
+	public DatabaseContext(IMongoClient client, string databaseName)
+	{
+		database = client.GetDatabase(databaseName);
+	}
 
 	// ------------------------------------------------------------------------------------------------------<
 }
