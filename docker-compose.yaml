@@ -1,43 +1,44 @@
 services:
-  application-api:
-    container_name: application-api
-    hostname: application-api
+  iw-kits-api:
+    container_name: iw-kits-api
+    hostname: iw-kits-api
 
-    image: application-api:latest
+    image: docker.io/iw-kits/api:latest
 
     env_file:
-      - .env
+      - .env.dev
     networks:
-      - application-network
+      - iw-kits-network
     depends_on:
-      - application-mdb
+      - iw-kits-mdb
     ports:
       - "23000:8080"
 
-  application-mdb:
-    container_name: application-mdb
-    hostname: application-mdb
+  iw-kits-mdb:
+    container_name: iw-kits-mdb
+    hostname: iw-kits-mdb
 
+    command: mongod --auth
     image: mongo:latest
 
     networks:
-      - application-network
+      - iw-kits-network
     ports:
       - "24000:27017"
     volumes:
-      - "application-vol:/data/db"
+      - "iw-kits-volume:/data/db"
 
 networks:
-  application-network:
-    name: application-network
+  iw-kits-network:
+    name: iw-kits-network
     driver: bridge
 
 volumes:
-  application-vol:
-    name: application-vol
+  iw-kits-volume:
+    name: iw-kits-volume
     driver: local
 
     driver_opts:
       type: none
-      device: ./mongo
+      device: ./mongodb
       o: bind
