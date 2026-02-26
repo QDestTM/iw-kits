@@ -76,9 +76,19 @@
 			"badge": "↓"
 		},
 		{
-			"folderPath": ".env\\",
+			"folderPath": ".env.dev\\",
 			"color": "foldercolorizer.color_cccc66",
 			"badge": "⌔"
+		},
+		{
+			"folderPath": ".env.loc\\",
+			"color": "foldercolorizer.color_cccc66",
+			"badge": "⌔"
+		},
+		{
+			"folderPath": "IWKits.Api.cs\\",
+			"color": "foldercolorizer.color_339999",
+			"badge": "⚙"
 		},
 		{
 			"folderPath": "IWKits.Api.csproj\\",
