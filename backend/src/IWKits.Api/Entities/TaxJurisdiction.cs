@@ -1,4 +1,4 @@
-namespace IWKits.Api;
+namespace IWKits.Api.Entities;
 
 // Namespaces used by this file
 using MongoDB.Bson.Serialization.Attributes;
