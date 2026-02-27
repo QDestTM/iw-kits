@@ -39,13 +39,13 @@ public sealed class OrderProcessService : IOrderProcessService
 		}
 
 		// Calculate tax info to include it into the new order info
-		var geoZoneInfo = await geoLocation.FindGeoZoneInfoAsync(coordinates);
+		var geoZoneInfo = await geoLocation.FindGeoZoneInfoAsync(coordinates, serviceArea.StateId);
 
-		if ( geoZoneInfo is null || geoZoneInfo.StateId != serviceArea.StateId )
+		if ( geoZoneInfo is null )
 		{
 			return OrderProcessResult.Failure(
-				$"Order {ordId}: Location is in '{geoZoneInfo?.StateId ?? "Unknown state"}'" +
-				$" which is outside the required service area '{serviceArea.StateId}'.");
+				$"Id({ordId}): Unable to calculate tax information for the" +
+				$" selected location in '{serviceArea.StateId}'.");
 		}
 
 		// Get tax rate info from received geo zip info

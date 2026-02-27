@@ -13,7 +13,7 @@ public interface IGeoLocationService
 	Task<ServiceArea?> FindServiceAreaAsync(GeoJson2DGeographicCoordinates coordinates);
 
 
-	Task<GeoZoneInfo?> FindGeoZoneInfoAsync(GeoJson2DGeographicCoordinates coordinates);
+	Task<GeoZoneInfo?> FindGeoZoneInfoAsync(GeoJson2DGeographicCoordinates coordinates, string state);
 
 
 	Task<TaxRateInfo?> FindTaxRateInfoAsync(int zipCode, string state);

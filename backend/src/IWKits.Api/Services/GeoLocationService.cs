@@ -27,7 +27,8 @@ public sealed class GeoLocationService : IGeoLocationService
 
 	// # ----------------------------------------------------------------------------------------------------<
 
-	public async Task<ServiceArea?> FindServiceAreaAsync(GeoJson2DGeographicCoordinates coordinates)
+	public async Task<ServiceArea?> FindServiceAreaAsync(
+		GeoJson2DGeographicCoordinates coordinates)
 	{
 		var filter = Builders<ServiceArea>.Filter.GeoIntersects(
 			x => x.Boundary, GeoJson.Point(coordinates));
@@ -37,14 +38,22 @@ public sealed class GeoLocationService : IGeoLocationService
 	}
 
 
-	public async Task<GeoZoneInfo?> FindGeoZoneInfoAsync(GeoJson2DGeographicCoordinates coordinates)
+	public async Task<GeoZoneInfo?> FindGeoZoneInfoAsync(
+		GeoJson2DGeographicCoordinates coordinates, string state)
 	{
-		var nearSphereFilter = Builders<GeoZoneInfo>.Filter.NearSphere(
-			x => x.Coordinates, GeoJson.Point(coordinates));
+		// Create geo zone info filter builder
+		var filterBuilder = Builders<GeoZoneInfo>.Filter;
+
+		// Create filter based on zip code value
+		var geoZoneFilter = filterBuilder.And
+		(
+			filterBuilder.NearSphere(x => x.Coordinates, GeoJson.Point(coordinates)),
+			filterBuilder.        Eq(x => x.StateId, state)
+		);
 
 		// Use created filter to find first suitable element
 		return await coreDatabase.GeoZones
-			.Find(nearSphereFilter)
+			.Find(geoZoneFilter)
 			.Limit(limit: 1)
 			.FirstOrDefaultAsync();
 	}
@@ -60,7 +69,7 @@ public sealed class GeoLocationService : IGeoLocationService
 			entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12);
 			entry.Priority = CacheItemPriority.High;
 
-			// Create tax rate filter builder
+			// Create tax rate info filter builder
 			var filterBuilder = Builders<TaxRateInfo>.Filter;
 
 			// Create filter based on zip code value
