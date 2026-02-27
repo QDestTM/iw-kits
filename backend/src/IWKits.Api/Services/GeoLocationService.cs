@@ -30,11 +30,14 @@ public sealed class GeoLocationService : IGeoLocationService
 	public async Task<ServiceArea?> FindServiceAreaAsync(
 		GeoJson2DGeographicCoordinates coordinates)
 	{
-		var filter = Builders<ServiceArea>.Filter.GeoIntersects(
+		var filter = Builders<ServiceAreaFull>.Filter.GeoIntersects(
 			x => x.Boundary, GeoJson.Point(coordinates));
 
 		// Try to find service areas withing provided coordinates are defined
-		return await coreDatabase.SerAreas.Find(filter).FirstOrDefaultAsync();
+		return await coreDatabase.SerAreas
+			.Find(filter)
+			.As<ServiceArea>()
+			.FirstOrDefaultAsync();
 	}
 
 
@@ -42,7 +45,7 @@ public sealed class GeoLocationService : IGeoLocationService
 		GeoJson2DGeographicCoordinates coordinates, string state)
 	{
 		// Create geo zone info filter builder
-		var filterBuilder = Builders<GeoZoneInfo>.Filter;
+		var filterBuilder = Builders<GeoZoneInfoFull>.Filter;
 
 		// Create filter based on zip code value
 		var geoZoneFilter = filterBuilder.And
@@ -55,6 +58,7 @@ public sealed class GeoLocationService : IGeoLocationService
 		return await coreDatabase.GeoZones
 			.Find(geoZoneFilter)
 			.Limit(limit: 1)
+			.As<GeoZoneInfo>()
 			.FirstOrDefaultAsync();
 	}
 
@@ -70,7 +74,7 @@ public sealed class GeoLocationService : IGeoLocationService
 			entry.Priority = CacheItemPriority.High;
 
 			// Create tax rate info filter builder
-			var filterBuilder = Builders<TaxRateInfo>.Filter;
+			var filterBuilder = Builders<TaxRateInfoFull>.Filter;
 
 			// Create filter based on zip code value
 			var taxRateFilter = filterBuilder.And
@@ -83,6 +87,7 @@ public sealed class GeoLocationService : IGeoLocationService
 			return await coreDatabase.TaxRates
 				.Find(taxRateFilter)
 				.Limit(limit: 1)
+				.As<TaxRateInfo>()
 				.FirstOrDefaultAsync();
 		});
 	}
