@@ -15,6 +15,7 @@ mongodb/**
 .env
 .env.*
 !.env.example
+!.env.dev
 
 # Api ignores
 backend/**/bin/
@@ -55,3 +56,5 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sw?
+# Other files
+desktop.ini
