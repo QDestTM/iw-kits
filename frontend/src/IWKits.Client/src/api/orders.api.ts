@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:23000/api/v1/orders';
+const API_URL = '/api/v1/orders';
 
 export interface TaxJurisdiction {
   name: string;
@@ -40,6 +40,11 @@ export const ordersApi = {
 
   create: async (data: CreateOrderDto): Promise<Order> => {
     const response = await axios.post(API_URL, data);
+
+    if (response.data?.error_message) {
+      throw new Error(response.data.error_message);
+    }
+
     return response.data?.created_order;
   },
 
