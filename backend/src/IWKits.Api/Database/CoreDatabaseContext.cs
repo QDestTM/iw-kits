@@ -14,6 +14,8 @@ public sealed class CoreDatabaseContext : DatabaseContext
 
 	public IMongoCollection<GeoZoneInfo> GeoZones => database.GetCollection<GeoZoneInfo>("geozones");
 
+	public IMongoCollection<ServiceArea> SerAreas => database.GetCollection<ServiceArea>("serareas");
+
 	// Public instance constructors
 	public CoreDatabaseContext(IMongoClient client, string databaseName)
 		: base(client, databaseName) {}
