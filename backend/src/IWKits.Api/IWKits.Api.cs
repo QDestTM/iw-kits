@@ -2,13 +2,15 @@ namespace IWKits.Api;
 
 // Namespaces used by this file
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
+using IWKits.Api.Settings;
+using IWKits.Api.Database;
+using IWKits.Api.Services;
 using MongoDB.Driver;
-using System;
 
 // Main content of the file
 public static class IWKitsApi
@@ -23,17 +25,6 @@ public static class IWKitsApi
 		builder.AddApplicationServices();
 		var application = builder.Build();
 
-		// Configure database using manually created scoped lifecycle
-		using ( var scope = application.Services.CreateScope() )
-		{
-			var context = scope.ServiceProvider.GetRequiredService<IMongoDBContext>();
-
-			if ( context is MongoDBContext mongoContext )
-			{
-				await mongoContext.ConfigureDatabaseAsync();
-			}
-		}
-
 		// Register endpoints and pipelines
 		application.MapApplicationEndpoints();
 		application.UseApplicationPipelines();
@@ -46,55 +37,98 @@ public static class IWKitsApi
 
 	private static void AddApplicationServices(this WebApplicationBuilder builder)
 	{
-		var configuration = builder.Configuration;
-		var environment   = builder.Environment;
-		var services      = builder.Services;
+		var cfg = builder.Configuration;
+		var env = builder.Environment;
+		var srv = builder.Services;
 
 		// Add general services to application
-		services.AddControllers();
-		services.AddEndpointsApiExplorer();
-		services.AddSwaggerGen();
+		srv.AddControllers();
+		srv.AddEndpointsApiExplorer();
+		srv.AddSwaggerGen();
+
+		// Add options-related services
+		srv.AddOptions<MongoDBSettings>()
+			.Bind( cfg.GetSection(MongoDBSettings.SectionName) )
+			.ValidateDataAnnotations()
+			.ValidateOnStart();
+
+		srv.AddOptions<ConstraintSettings>()
+			.Bind( cfg.GetSection(ConstraintSettings.SectionName) )
+			.ValidateDataAnnotations()
+			.ValidateOnStart();
+
+		srv.AddOptions<ServiceSettings>()
+			.Bind( cfg.GetSection(ServiceSettings.SectionName) )
+			.ValidateDataAnnotations()
+			.ValidateOnStart();
 
 		// Add database-related services
-		services.AddSingleton<IMongoClient>((sp) =>
+		srv.AddSingleton<IMongoClient>((sp) =>
 		{
-			var connString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+			var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
 
-			// Throw for invalid settings of the environment
-			if ( string.IsNullOrWhiteSpace(connString) )
-			{
-				throw new InvalidOperationException(
-					"Critical error: 'DB_CONNECTION_STRING' environment variable is missing. " +
-					"Check your .env file or environment settings.");
-			}
+			string username = Utils.GetRequiredEnv("DB_CONNECTION_USERNAME");
+			string password = Utils.GetRequiredEnv("DB_CONNECTION_PASSWORD");
 
-			return new MongoClient(connectionString: connString);
+			string hostname = Utils.GetRequiredEnv("DB_CONNECTION_HOSTNAME");
+			string hostport = Utils.GetRequiredEnv("DB_CONNECTION_HOSTPORT");
+
+			// Create connection string with username, password and hostname variables
+			return new MongoClient(
+				$"mongodb://{username}:{password}@{hostname}:{hostport}/?authSource={settings.AuthSource}"
+			);
 		});
 
-		services.AddSingleton<IMongoDBContext>((sp) =>
+		srv.AddSingleton<AuthDatabaseContext>((sp) =>
 		{
-			var databaseName = configuration.GetSection("MongoDatabase:DatabaseName").Value;
+			var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
 
-			// Throw for invalid configuration of the database name
-			if ( string.IsNullOrWhiteSpace(databaseName) )
-			{
-				throw new InvalidOperationException(
-					"Configuration error: 'MongoDatabase:DatabaseName' not found in appsettings.json.");
-			}
-
+			// Get running mongo client and create context
 			var client = sp.GetRequiredService<IMongoClient>();
-			return new MongoDBContext(client, databaseName);
+			return new(client, settings.Databases.Auth);
 		});
 
-		// Add third party API related services
-		if ( environment.IsDevelopment() )
+		srv.AddSingleton<CoreDatabaseContext>((sp) =>
 		{
-			services.AddSingleton<ITaxCalculationService, FakeTaxCalculationService>();
-		}
-		else
+			var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+
+			// Get running mongo client and create context
+			var client = sp.GetRequiredService<IMongoClient>();
+			return new(client, settings.Databases.Core);
+		});
+
+		srv.AddSingleton<DataDatabaseContext>((sp) =>
 		{
-			services.AddScoped<ITaxCalculationService, TaxCalculationService>();
-		}
+			var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+
+			// Get running mongo client and create context
+			var client = sp.GetRequiredService<IMongoClient>();
+			return new(client, settings.Databases.Data);
+		});
+
+		// Add rest of the services
+		srv.AddSingleton<IGeoLocationService>((sr) =>
+		{
+			var coreDatabase = sr.GetRequiredService<CoreDatabaseContext>();
+			return new GeoLocationService(coreDatabase);
+		});
+
+		srv.AddSingleton<ITaxApplierService>((sr) =>
+		{
+			var settings = sr.GetRequiredService<IOptions<ServiceSettings>>().Value;
+
+			return ( settings.TaxApplier == "fake" )
+				? new TaxApplierFakeService()
+				: new TaxApplierService();
+		});
+
+		srv.AddSingleton<IOrderProcessService>((sr) =>
+		{
+			var geoLocation = sr.GetRequiredService<IGeoLocationService>();
+			var taxApplier = sr.GetRequiredService<ITaxApplierService>();
+
+			return new OrderProcessService(geoLocation, taxApplier);
+		});
 	}
 
 
@@ -102,9 +136,9 @@ public static class IWKitsApi
 	{
 		var apiV1 = application.MapGroup("api/v1");
 
-		apiV1.MapAddOrderEndpoint();
-		apiV1.MapGetOrdersEndpoint();
-		apiV1.MapImportOrdersEndpoint();
+		Features.CreateOrder.CreateOrderEndpoint.MapCreateOrderEndpoint(apiV1);
+		Features.GetOrders.GetOrdersEndpoint.MapGetOrdersEndpoint(apiV1);
+		Features.ImportOrders.ImportOrdersEndpoint.MapImportOrdersEndpoint(apiV1);
 	}
 
 
