@@ -5,10 +5,17 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Obsidian ignores
+.obsidian/**
+
+# MongoDB ignores
+mongodb/**
+
 # Environment ignores
 .env
 .env.*
 !.env.example
+!.env.dev
 
 # Node/Next.js ignores
 frontend/node_modules/
@@ -39,3 +46,9 @@ coverage/
 
 # Publish output
 publish/
+
+# Test-related files
+sample-input.csv
+
+# Other files
+desktop.ini

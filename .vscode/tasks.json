@@ -16,5 +16,32 @@
 
 			"problemMatcher": "$msCompile"
 		},
+
+		{
+			"label": "start-mdb",
+			"type" : "process",
+
+			"isBackground": true,
+			"command" : "mongod",
+
+			"args" : [
+				"--dbpath", "${config:iwkits.mdbPath}",
+				"--port"  , "${config:iwkits.mdbPort}",
+				"${input:auth}", "--quiet"
+			],
+		},
 	],
+
+	"inputs": [
+		{
+			"id": "auth",
+			"description": "Select authentification flag",
+
+			"type": "pickString",
+			"options": [
+				"--auth"  ,
+				"--noauth"
+			]
+		}
+	]
 }
