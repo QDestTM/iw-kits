@@ -1,14 +1,14 @@
-namespace IWKits.Api;
+namespace IWKits.Api.Services;
 
 // Namespaces used by this file
-using System.Threading.Tasks;
+using IWKits.Api.Entities;
 
 // Main content of the file
-public interface ITaxCalculationService
+public interface ITaxApplierService
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	Task<TaxInfo> CalculateTaxAsync(double latitude, double longitude, decimal subtotal);
+	TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZip, decimal subtotal);
 
 	// ------------------------------------------------------------------------------------------------------<
 }

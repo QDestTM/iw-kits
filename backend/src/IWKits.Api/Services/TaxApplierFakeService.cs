@@ -1,18 +1,15 @@
-namespace IWKits.Api;
+namespace IWKits.Api.Services;
 
 // Namespaces used by this file
-using System.Threading.Tasks;
+using IWKits.Api.Entities;
 
 // Main content of the file
-public sealed class FakeTaxCalculationService : ITaxCalculationService
+public sealed class TaxApplierFakeService : ITaxApplierService
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	public async Task<TaxInfo> CalculateTaxAsync(
-		double latitude, double longitude, decimal subtotal)
+	public TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZip, decimal subtotal)
 	{
-		await Task.Delay(50); // Imitate API latency
-
 		// Define fake tax rates
 		decimal stateRate = 0.04m;
 		decimal cityRate = 0.025m;
@@ -22,8 +19,8 @@ public sealed class FakeTaxCalculationService : ITaxCalculationService
 		decimal compositeRate = stateRate + cityRate + specialRate;
 		decimal taxAmount = System.Math.Round(subtotal * compositeRate, 2);
 
-		// Finaly create tax calculation result
-		return new TaxInfo
+		// Create tax calculations result
+		return new TaxApplyResult()
 		{
 			CompositeTaxRate = compositeRate,
 			TaxAmount = taxAmount,
@@ -34,7 +31,7 @@ public sealed class FakeTaxCalculationService : ITaxCalculationService
 				StateRate = stateRate,
 				CityRate = cityRate,
 				SpecialRate = specialRate,
-				CountryRate = 0.0m
+				CountyRate = 0.0m
 			},
 
 			Jurisdictions =
