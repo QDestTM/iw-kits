@@ -17,15 +17,6 @@ mongodb/**
 !.env.example
 !.env.dev
 
-# Node/Next.js ignores
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/dist/
-frontend/.turbo/
-frontend/coverage/
-frontend/.eslintcache
-
 # Api ignores
 backend/**/bin/
 backend/**/obj/
@@ -50,5 +41,20 @@ publish/
 # Test-related files
 sample-input.csv
 
+node_modules
+dist
+dist-ssr
+*.local
+.eslintcache
+.vite
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.ntvs*
+*.njsproj
+*.sw?
 # Other files
 desktop.ini
