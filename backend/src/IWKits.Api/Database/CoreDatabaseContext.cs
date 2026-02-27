@@ -10,11 +10,11 @@ public sealed class CoreDatabaseContext : DatabaseContext
 	// ^ ----------------------------------------------------------------------------------------------------<
 
 	// Public instance properties
-	public IMongoCollection<TaxRateInfo> TaxRates => database.GetCollection<TaxRateInfo>("taxrates");
+	public IMongoCollection<TaxRateInfoFull> TaxRates => database.GetCollection<TaxRateInfoFull>("taxrates");
 
-	public IMongoCollection<GeoZoneInfo> GeoZones => database.GetCollection<GeoZoneInfo>("geozones");
+	public IMongoCollection<GeoZoneInfoFull> GeoZones => database.GetCollection<GeoZoneInfoFull>("geozones");
 
-	public IMongoCollection<ServiceArea> SerAreas => database.GetCollection<ServiceArea>("serareas");
+	public IMongoCollection<ServiceAreaFull> SerAreas => database.GetCollection<ServiceAreaFull>("serareas");
 
 	// Public instance constructors
 	public CoreDatabaseContext(IMongoClient client, string databaseName)
