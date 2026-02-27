@@ -8,7 +8,7 @@ public sealed class TaxApplierFakeService : ITaxApplierService
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	public TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZip, decimal subtotal)
+	public TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZone, decimal subtotal)
 	{
 		// Define fake tax rates
 		decimal stateRate = 0.04m;
