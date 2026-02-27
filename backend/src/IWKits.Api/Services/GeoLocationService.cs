@@ -60,13 +60,19 @@ public sealed class GeoLocationService : IGeoLocationService
 			entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12);
 			entry.Priority = CacheItemPriority.High;
 
+			// Create tax rate filter builder
+			var filterBuilder = Builders<TaxRateInfo>.Filter;
+
 			// Create filter based on zip code value
-			var zipCodeFilter = Builders<TaxRateInfo>
-				.Filter.Eq(x => x.ZipCode, zipCode);
+			var taxRateFilter = filterBuilder.And
+			(
+				filterBuilder.Eq(x => x.ZipCode, zipCode),
+				filterBuilder.Eq(x => x.StateId, state)
+			);
 
 			// Use created filter to find first suitable element
 			return await coreDatabase.TaxRates
-				.Find(zipCodeFilter)
+				.Find(taxRateFilter)
 				.Limit(limit: 1)
 				.FirstOrDefaultAsync();
 		});
