@@ -11,6 +11,7 @@ using IWKits.Api.Settings;
 using IWKits.Api.Database;
 using IWKits.Api.Services;
 using MongoDB.Driver;
+using Microsoft.Extensions.Caching.Memory;
 
 // Main content of the file
 public static class IWKitsApi
@@ -44,6 +45,7 @@ public static class IWKitsApi
 		// Add general services to application
 		srv.AddControllers();
 		srv.AddEndpointsApiExplorer();
+		srv.AddMemoryCache();
 		srv.AddSwaggerGen();
 
 		// Add options-related services
@@ -106,20 +108,21 @@ public static class IWKitsApi
 			return new(client, settings.Databases.Data);
 		});
 
-		// Add rest of the services
-		srv.AddSingleton<IGeoLocationService>((sr) =>
-		{
-			var coreDatabase = sr.GetRequiredService<CoreDatabaseContext>();
-			return new GeoLocationService(coreDatabase);
-		});
-
+		// Add other singleton services
 		srv.AddSingleton<ITaxApplierService>((sr) =>
 		{
 			var settings = sr.GetRequiredService<IOptions<ServiceSettings>>().Value;
 
-			return ( settings.TaxApplier == "fake" )
-				? new TaxApplierFakeService()
+			return ( settings.TaxApplier == "fake" ) ? new TaxApplierFakeService()
 				: new TaxApplierService();
+		});
+
+		srv.AddSingleton<IGeoLocationService>((sr) =>
+		{
+			var coreDatabase = sr.GetRequiredService<CoreDatabaseContext>();
+			var memoryCache = sr.GetRequiredService<IMemoryCache>();
+
+			return new GeoLocationService(coreDatabase, memoryCache);
 		});
 
 		srv.AddSingleton<IOrderProcessService>((sr) =>
