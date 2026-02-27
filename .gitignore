@@ -48,3 +48,6 @@ publish/
 
 # Test-related files
 sample-input.csv
+
+# Other files
+desktop.ini

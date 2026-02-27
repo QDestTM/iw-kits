@@ -5,6 +5,7 @@
 	"iwkits.mdbPort" : "24000",
 
 	"files.exclude": {
+		"desktop.ini" : true,
 		"**/bin": true,
 		"**/obj": true,
 	},
