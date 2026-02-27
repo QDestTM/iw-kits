@@ -12,7 +12,7 @@ public class CoreDatabaseContext : DatabaseContext
 	// Public instance properties
 	public IMongoCollection<TaxRateInfo> TaxRates => database.GetCollection<TaxRateInfo>("taxrates");
 
-	public IMongoCollection<GeoZipInfo> GeoZips => database.GetCollection<GeoZipInfo>("geozips");
+	public IMongoCollection<GeoZoneInfo> GeoZones => database.GetCollection<GeoZoneInfo>("geozones");
 
 	// Public instance constructors
 	public CoreDatabaseContext(IMongoClient client, string databaseName)
