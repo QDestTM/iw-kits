@@ -1,14 +1,18 @@
-namespace IWKits.Api;
+namespace IWKits.Api.Features.ImportOrders;
 
 // Namespaces used by this file
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System.Globalization;
+using IWKits.Api.Entities;
+using IWKits.Api.Services;
+using IWKits.Api.Database;
+using IWKits.Api.Settings;
 using System.Threading;
 using System.IO;
 using CsvHelper;
@@ -34,12 +38,10 @@ public static class ImportOrdersEndpoint
 
 	private static async Task<IResult> ImportOrdersHandlerAsync
 	(
-		[FromServices] IConfiguration configuration,
-		[FromServices] ITaxCalculationService taxCalculator,
-		[FromServices] IMongoDBContext databaseContext,
-		HttpContext httpContext,
-		IFormFile file,
-		CancellationToken cancellationToken)
+		[FromServices] IOptions<ConstraintSettings> constraints,
+		[FromServices] IOrderProcessService orderProcess,
+		[FromServices] DataDatabaseContext dataDatabase,
+		HttpContext httpContext, IFormFile file, CancellationToken ct)
 	{
 		if ( file is null || file.Length == 0 )
 		{
@@ -47,67 +49,39 @@ public static class ImportOrdersEndpoint
 		}
 
 		// Get size of batch for importing
-		int importBatchSize = Math.Max
-		(
-			val1: configuration.GetValue<int>("Constraints:ImportBatchSize"),
-			val2: 1000
-		);
+		int importBatchSize = constraints.Value.ImportBatchSize;
 
 		// Variable to count imported records in total
 		int importedTotal = 0;
 
 		// Lists to store imported orders and errors
-		var imported = new List<OrderInfo>(capacity: importBatchSize);
-		var errors   = new List<string>   (capacity: 4);
+		var imported = new List<OrderInfo>();
+		var errors   = new List<string>   ();
 
 		// Create file reader and use it to create csv reader instance
 		using var reader = new StreamReader( file.OpenReadStream() );
 		using var csv    = new CsvReader(reader, CultureInfo.InvariantCulture);
 
 		// Read record from csv file line by line using asyncronouns reader
-		var asyncOrdersReader = csv.GetRecordsAsync<OrderInfoCsv>(cancellationToken);
+		var asyncOrdersReader = csv.GetRecordsAsync<RawOrderInfo>(ct);
 
-		await foreach ( var csvOrder in asyncOrdersReader )
+		await foreach ( var rawOrder in asyncOrdersReader )
 		{
-			try
+			var processResult = await orderProcess.ProcessAsync(rawOrder);
+
+			// Store message for error that may occur at processing
+			if ( processResult.HasError )
 			{
-				var calculationResult = await taxCalculator.CalculateTaxAsync
-				(
-					latitude : csvOrder.Latitude,
-					longitude: csvOrder.Longitude,
-					subtotal : csvOrder.Subtotal
-				);
-
-				// Create new record of order info
-				var order = new OrderInfo
-				{
-					Id = Utils.GuidFrom(csvOrder.Id),
-
-					Latitude  = csvOrder.Latitude,
-					Longitude = csvOrder.Longitude,
-					Subtotal  = csvOrder.Subtotal,
-
-					CompositeTaxRate = calculationResult.CompositeTaxRate,
-					TaxAmount        = calculationResult.TaxAmount,
-					TotalAmount      = calculationResult.TotalAmount,
-					Breakdown        = calculationResult.Breakdown,
-					Jurisdictions    = calculationResult.Jurisdictions,
-
-					Timestamp = csvOrder.Timestamp
-				};
-
-				// Store order to the list and increase counter
-				imported.Add(order); importedTotal++;
+				errors.Add(processResult.ErrorMessage); continue;
 			}
-			catch ( Exception exception )
-			{
-				errors.Add($"Error processing row: {exception.Message}");
-			}
+
+			// Store order to the list and increase counter
+			imported.Add(processResult.OrderInfo); importedTotal++;
 
 			// Store orders when batch if filled
 			if ( imported.Count >= importBatchSize )
 			{
-				await databaseContext.Orders.InsertManyAsync(imported, null, cancellationToken);
+				await dataDatabase.Orders.InsertManyAsync(imported, null, ct);
 				imported.Clear();
 			}
 		}
@@ -115,7 +89,7 @@ public static class ImportOrdersEndpoint
 		// Store orders that can remain in imported
 		if ( imported.Count != 0 )
 		{
-			await databaseContext.Orders.InsertManyAsync(imported, null, cancellationToken);
+			await dataDatabase.Orders.InsertManyAsync(imported, null, ct);
 		}
 
 		// Send respond with results to the client

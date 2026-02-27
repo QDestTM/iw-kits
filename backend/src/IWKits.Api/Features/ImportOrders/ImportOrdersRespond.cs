@@ -1,4 +1,4 @@
-namespace IWKits.Api;
+namespace IWKits.Api.Features.ImportOrders;
 
 // Namespaces used by this file
 using System.Text.Json.Serialization;
