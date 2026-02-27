@@ -1,6 +1,7 @@
 namespace IWKits.Api.Services;
 
 // Namespaces used by this file
+using MongoDB.Driver.GeoJsonObjectModel;
 using System.Threading.Tasks;
 using IWKits.Api.Entities;
 using System;
@@ -15,8 +16,7 @@ public sealed class OrderProcessService : IOrderProcessService
 	private readonly ITaxApplierService taxApplier;
 
 	// Public instance constructors
-	public OrderProcessService(
-		IGeoLocationService geoLocation, ITaxApplierService taxApplier)
+	public OrderProcessService(IGeoLocationService geoLocation, ITaxApplierService taxApplier)
 	{
 		this.geoLocation = geoLocation;
 		this.taxApplier = taxApplier;
@@ -26,32 +26,40 @@ public sealed class OrderProcessService : IOrderProcessService
 
 	public async Task<OrderProcessResult> ProcessAsync(RawOrderInfo rawOrder)
 	{
-		// Calculate tax info to include it into the new order info
-		var nearGeo = await geoLocation.FindNearestZoneAsync
-		(
-			lng: rawOrder.Longitude,
-			lat: rawOrder.Latitude
-		);
+		var coordinates = GeoJson.Geographic(rawOrder.Longitude, rawOrder.Latitude);
+		var ordId = rawOrder.Id;
 
-		// Not in service area if geo is null or state is not NY
-		if ( nearGeo is null || nearGeo.StateId != "NY" )
+		// Find closest service area from the provided coordinates
+		var serviceArea = await geoLocation.FindServiceAreaAsync(coordinates);
+
+		if ( serviceArea is null || serviceArea.StateId != "NY" )
 		{
 			return OrderProcessResult.Failure(
-				$"Id({rawOrder.Id}): Selected location is outside service area.");
+				$"Id({ordId}): Selected location is outside service area.");
+		}
+
+		// Calculate tax info to include it into the new order info
+		var geoZoneInfo = await geoLocation.FindGeoZoneInfoAsync(coordinates);
+
+		if ( geoZoneInfo is null || geoZoneInfo.StateId != serviceArea.StateId )
+		{
+			return OrderProcessResult.Failure(
+				$"Order {ordId}: Location is in '{geoZoneInfo?.StateId ?? "Unknown state"}'" +
+				$" which is outside the required service area '{serviceArea.StateId}'.");
 		}
 
 		// Get tax rate info from received geo zip info
-		var taxRate = await geoLocation.GetTaxRateAsync(nearGeo.ZipCode);
+		var taxRate = await geoLocation.FindTaxRateInfoAsync(geoZoneInfo.ZipCode, serviceArea.StateId);
 
 		// Tax rate data for this specific ZIP is missing in the database
 		if ( taxRate is null )
 		{
 			return OrderProcessResult.Failure(
-				$"Id({rawOrder.Id}): Tax data is unavailable for the identified area ({nearGeo.ZipCode}).");
+				$"Id({ordId}): Tax data is unavailable for the identified area ({geoZoneInfo.ZipCode}).");
 		}
 
 		// Calculate applied tax using tax rate, geo zip and subtotal value
-		var appliedTax = taxApplier.Apply(taxRate, nearGeo, rawOrder.Subtotal);
+		var appliedTax = taxApplier.Apply(taxRate, geoZoneInfo, rawOrder.Subtotal);
 
 		// Return failure result if applied tax has errors
 		if ( appliedTax.HasError )
