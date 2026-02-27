@@ -1,6 +1,8 @@
 namespace IWKits.Api.Features.GetOrders;
 
 // Namespaces used by this file
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using System.Collections.Generic;
@@ -8,10 +10,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using IWKits.Api.Settings;
 using IWKits.Api.Entities;
 using IWKits.Api.Database;
+using System.Reflection;
 using System.Threading;
 using MongoDB.Driver;
+using System.Linq;
 using System;
 
 // Main content of the file
@@ -19,75 +24,169 @@ public static class GetOrdersEndpoint
 {
 	public const string Endpoint = "/orders";
 
+	//! Private static members
+	private static readonly Dictionary<string, Expression<Func<OrderInfo, object>>>
+		SortExpressions = CreateSortExpressions();
+
 	// ^ ----------------------------------------------------------------------------------------------------<
 
 	public static void MapGetOrdersEndpoint(this IEndpointRouteBuilder builder)
 	{
-		builder.MapGet(Endpoint, GetOrdersHandlerAsync).WithName("GetOrders")
-			.Produces<GetOrdersRespond>(200);
+		builder.MapGet(Endpoint, GetOrdersHandlerAsync)
+			.Produces<GetOrdersRespond>(200)
+			.WithName("GetOrders");
 	}
 
 	// @ ----------------------------------------------------------------------------------------------------<
 
 	private static async Task<IResult> GetOrdersHandlerAsync
 	(
+		[FromServices] IOptions<ConstraintSettings> constraints,
 		[FromServices] DataDatabaseContext dataDatabase,
-		[AsParameters] GetOrdersFindQuery filterOptions,
-		[AsParameters] GetOrdersSortQuery sortOptions,
-		HttpContext httpContext,
-		CancellationToken cancellationToken)
+		[AsParameters] GetOrdersQuery query,
+		HttpContext httpContext, CancellationToken ct)
 	{
-		var sortDefinition = CreateSortDefinition(sortOptions);
-		return Results.Ok();
+		// TODO: Options validation
+		var options = query.CreateOptions(constraints);
+		var filter = options.CreateFilterDefinition();
+
+		// Initialize an empty list for potential results
+		List<OrderInfo> items = [];
+
+		// Count total documents that match the filter criteria
+		var totalCount = await dataDatabase.Orders.CountDocumentsAsync(filter, null, ct);
+
+		// Calculate the total number of available pages
+		var totalPages = (long) Math.Ceiling((double) totalCount / options.PageSize);
+
+		// Fetch items only if results exist and the requested page is within range
+		if ( totalCount != 0 && options.Page <= totalPages )
+		{
+			var sorter = options.CreateSorterDefinition();
+
+			// Calculate pagination offsets
+			var skipCount = (options.Page - 1) * options.PageSize;
+			var takeCount = options.PageSize;
+
+			// Execute the query with sorting and pagination applied
+			items = await dataDatabase.Orders
+				.Find(filter)
+				.Sort(sorter)
+				.Skip(skipCount)
+				.Limit(takeCount)
+				.ToListAsync(ct);
+		}
+
+		// Return the response with data and pagination metadata
+		var respond = new GetOrdersRespond(items, totalCount, totalPages);
+		return Results.Ok(respond);
 	}
 
 	// ------------------------------------------------------------------------------------------------------<
 
-	private static SortDefinition<OrderInfo> CreateSortDefinition(GetOrdersSortQuery options)
+	private static FilterDefinition<OrderInfo> CreateFilterDefinition(this GetOrdersOptions options)
 	{
-		var definitions = new List<SortDefinition<OrderInfo>>();
-		var builder = Builders<OrderInfo>.Sort;
+		var filters = new List<FilterDefinition<OrderInfo>>();
+		var builder = Builders<OrderInfo>.Filter;
 
-		// Create array of expression and sort direction values to process
-		(int, Expression<Func<OrderInfo, object>>)[] definitionsSettings =
-		[
-			(options.Subtotal,         x => x.Timestamp),
-			(options.CompositeTaxRate, x => x.CompositeTaxRate),
-			(options.TaxAmount,        x => x.TaxAmount),
-			(options.TotalAmount,      x => x.TotalAmount),
-			(options.Timestamp,        x => x.Timestamp)
-		];
-
-		foreach ( var (direction, field) in definitionsSettings )
+		// Create timestamp filters definitions from options
+		if ( options.FromDate is not null )
 		{
-			if ( direction == 0 ) continue;
-
-			// Add sort based on provided direction
-			definitions.Add
-			(
-				(direction == 1)
-					? builder. Ascending(field)
-					: builder.Descending(field)
-			);
+			filters.Add( builder.Gte(x => x.Timestamp, options.FromDate) );
 		}
 
-		// Sort by date DESCENDING if no sorting options provided
-		if ( definitions.Count == 0 )
+		if ( options.ToDate is not null )
 		{
-			return builder.Descending(x => x.Timestamp);
+			filters.Add( builder.Lte(x => x.Timestamp, options.ToDate) );
 		}
 
-		// FOR PAGINATION: to prevent inconsistent sorting result
-		definitions.Add( builder.Ascending(x => x.Id) );
+		// Create total amount filters definitions from options
+		if ( options.MinTotalAmount is not null )
+		{
+			filters.Add( builder.Gte(x => x.TotalAmount, options.MinTotalAmount) );
+		}
 
-		// Combine created sort definitions
-		return builder.Combine(definitions);
+		if ( options.MaxTotalAmount is not null )
+		{
+			filters.Add( builder.Lte(x => x.TotalAmount, options.MaxTotalAmount) );
+		}
+
+		// Combine filters or return empty if none defined
+		return (filters.Count != 0)
+			? builder.And(filters)
+			: builder.Empty;
 	}
 
 
-	private static FilterDefinition<OrderInfo> CreateFilterDefinition(GetOrdersFindQuery options)
+	private static SortDefinition<OrderInfo> CreateSorterDefinition(this GetOrdersOptions options)
 	{
-		return Builders<OrderInfo>.Filter.Gt(x => x.Timestamp, DateTime.UtcNow);
+		var sorters = new List<SortDefinition<OrderInfo>>();
+		var builder = Builders<OrderInfo>.Sort;
+
+		// Create main sort definition based on SortBy field value
+		if ( !SortExpressions.TryGetValue(options.SortBy, out var field) )
+		{
+			field = x => x.Timestamp;
+		}
+
+		// Add sorter as descending/ascending based on options
+		sorters.Add(options.Descending
+			? builder.Descending(field)
+			: builder.Ascending (field)
+		);
+
+		// Add default sorter for id to preserve stability
+		sorters.Add( builder.Ascending(x => x.Id) );
+
+		// Combine sorters and return result
+		return builder.Combine(sorters);
+	}
+
+	// ------------------------------------------------------------------------------------------------------<
+
+	private static Dictionary<string, Expression<Func<OrderInfo, object>>> CreateSortExpressions()
+	{
+		Dictionary<string, Expression<Func<OrderInfo, object>>> expressions = [];
+
+		// Generate field accessort from each property with JsonPropertyName attribute
+		foreach ( var property in typeof(OrderInfo).GetProperties() )
+		{
+			var attribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+			if ( attribute is null ) continue;
+
+			// Create own expressions tree from json property name attribute
+			var parameter = Expression.Parameter(typeof(OrderInfo), "x");
+			var eproperty = Expression.Property(parameter, property);
+			var conversion = Expression.Convert(eproperty, typeof(object));
+
+			// Create final expression and store it into the map
+			var expression = Expression.Lambda<Func<OrderInfo, object>>(conversion, parameter);
+			expressions[attribute.Name] = expression;
+		}
+
+		return expressions;
+	}
+
+
+	private static GetOrdersOptions CreateOptions(
+		this GetOrdersQuery query, IOptions<ConstraintSettings> constrains)
+	{
+		var maxPageSize = constrains.Value.RespondMaxPageSize;
+
+		return new GetOrdersOptions
+		(
+			MinTotalAmount: query.MinTotalAmount,
+			MaxTotalAmount: query.MaxTotalAmount,
+
+			FromDate: query.FromDate,
+			ToDate  : query.ToDate,
+
+			SortBy: query.SortBy ?? "timestamp",
+			Descending: query.Descending ?? true,
+
+			PageSize: Math.Max(1, Math.Min(maxPageSize, query.PageSize ?? 24)),
+			Page: Math.Max(1, query.Page ?? 1)
+		);
 	}
 
 	// ------------------------------------------------------------------------------------------------------<
