@@ -5,7 +5,7 @@ using IWKits.Api.Entities;
 using MongoDB.Driver;
 
 // Main content of the file
-public class CoreDatabaseContext : DatabaseContext
+public sealed class CoreDatabaseContext : DatabaseContext
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
