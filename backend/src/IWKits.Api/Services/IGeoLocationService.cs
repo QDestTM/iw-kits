@@ -1,6 +1,7 @@
 namespace IWKits.Api.Services;
 
 // Namespaces used by this file
+using MongoDB.Driver.GeoJsonObjectModel;
 using System.Threading.Tasks;
 using IWKits.Api.Entities;
 
@@ -9,10 +10,13 @@ public interface IGeoLocationService
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	Task<GeoZoneInfo?> FindNearestZoneAsync(double lng, double lat);
+	Task<ServiceArea?> FindServiceAreaAsync(GeoJson2DGeographicCoordinates coordinates);
 
 
-	Task<TaxRateInfo?> GetTaxRateAsync(int zipCode);
+	Task<GeoZoneInfo?> FindGeoZoneInfoAsync(GeoJson2DGeographicCoordinates coordinates);
+
+
+	Task<TaxRateInfo?> FindTaxRateInfoAsync(int zipCode, string state);
 
 	// ------------------------------------------------------------------------------------------------------<
 }
