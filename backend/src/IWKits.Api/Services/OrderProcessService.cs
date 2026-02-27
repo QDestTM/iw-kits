@@ -30,7 +30,7 @@ public sealed class OrderProcessService : IOrderProcessService
 		var nearGeo = await geoLocation.FindNearestZoneAsync
 		(
 			lng: rawOrder.Longitude,
-			lat : rawOrder.Latitude
+			lat: rawOrder.Latitude
 		);
 
 		// Not in service area if geo is null or state is not NY
