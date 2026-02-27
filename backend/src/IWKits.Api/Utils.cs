@@ -8,12 +8,17 @@ public static class Utils
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	public static Guid GuidFrom(ulong x)
+	public static string GetRequiredEnv(string key)
 	{
-		Span<byte> bytes = stackalloc byte[16];
-		BitConverter.TryWriteBytes(bytes, x);
+		string? value = Environment.GetEnvironmentVariable(key);
+		if ( value is not null ) return value;
 
-		return new Guid(bytes);
+		// Throw for invalid settings of the environment
+		throw new InvalidOperationException
+		(
+			$"Critical error: '{key}' environment variable is missing. " +
+			"Check your .env file or environment settings."
+		);
 	}
 
 	// ------------------------------------------------------------------------------------------------------<
