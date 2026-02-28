@@ -142,13 +142,16 @@ Use the following credentials to access the management panel or the database:
 
 `GET /api/v1/orders?page=1&page_size=24&sort_by=timestamp&descending=true`
 
-|**Parameter**|**Type**|**Description**|
-|---|---|---|
-|`page`|int|Page number (Default: 1)|
-|`page_size`|int|Items per page (Default: 24, Max: 128)|
-|`sort_by`|string|Field: `timestamp`, `subtotal`, `total_amount`, `tax_amount`|
-|`from_date`|ISO date|Filter: orders after this date|
-|`min_total_amount`|decimal|Filter: minimum total amount|
+| **Parameter**      | **Type** | **Description**                                              |
+| ------------------ | -------- | ------------------------------------------------------------ |
+| `page`             | int      | Page number (Default: 1)                                     |
+| `page_size`        | int      | Items per page (Default: 24, Max: 128)                       |
+| `sort_by`          | string   | Field: `timestamp`, `subtotal`, `total_amount`, `tax_amount` |
+| `descending`       | bool     | Sorting direction, `true` for descending                     |
+| `from_date`        | ISO date | Filter: orders after this date                               |
+| `to_date`          | ISO date | Filter: orders before this date                              |
+| `min_total_amount` | decimal  | Filter: minimum total amount                                 |
+| `max_total_amount` | decimal  | Filter: maximum total amount                                 |
 
 ### Import Orders (CSV)
 
