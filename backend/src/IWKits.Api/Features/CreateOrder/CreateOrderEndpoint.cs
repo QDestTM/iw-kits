@@ -1,6 +1,7 @@
 namespace IWKits.Api.Features.CreateOrder;
 
 // Namespaces used by this file
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +23,7 @@ public static class CreateOrderEndpoint
 	public static void MapCreateOrderEndpoint(this IEndpointRouteBuilder builder)
 	{
 		builder.MapPost(Endpoint, CreateOrderHandlerAsync)
+			.RequireAuthorization(new AuthorizeAttribute { Roles = "admin" })
 			.Produces<CreateOrderRespond>(200)
 			.WithName("CreateOrder");
 	}
