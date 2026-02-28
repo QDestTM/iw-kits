@@ -10,8 +10,8 @@ public sealed class ConstraintSettings
 
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	[Required, Range(1024, int.MaxValue)]
-	public int ImportBatchSize { get; set; } = 0;
+	[Required, Range(8, 256)]
+	public int ImportChunkSize { get; set; } = 0;
 
 	[Required, Range(16, int.MaxValue)]
 	public int RespondMaxPageSize { get; set; } = 0;
