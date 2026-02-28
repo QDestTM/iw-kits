@@ -1,6 +1,7 @@
 namespace IWKits.Api;
 
 // Namespaces used by this file
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +12,8 @@ using IWKits.Api.Settings;
 using IWKits.Api.Database;
 using IWKits.Api.Services;
 using MongoDB.Driver;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 // Main content of the file
 public static class IWKitsApi
@@ -43,9 +46,37 @@ public static class IWKitsApi
 
 		// Add general services to application
 		srv.AddControllers();
+		srv.AddAuthorization();
 		srv.AddEndpointsApiExplorer();
 		srv.AddMemoryCache();
 		srv.AddSwaggerGen();
+
+		// Add authorization related services
+		builder.Services
+			.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+			.AddJwtBearer();
+
+		builder.Services
+			.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+			.Configure<IOptions<SecuritySettings>>((options, securitySettings) =>
+			{
+				var jwtKey = Utils.GetRequiredEnv("JWT_KEY");
+				var settings = securitySettings.Value;
+
+				var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuer = true,
+					ValidIssuer = settings.JwtIssuer,
+
+					ValidateAudience = true,
+					ValidAudience = settings.JwtAudience,
+
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = signingKey
+				};
+			});
 
 		// Add options-related services
 		srv.AddOptions<MongoDBSettings>()
