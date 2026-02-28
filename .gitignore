@@ -27,6 +27,14 @@ backend/**/*.cache
 backend/**/*.pdb
 backend/.vs/
 
+# Frontend ignores
+node_modules
+dist
+dist-ssr
+*.local
+.eslintcache
+.vite
+
 # Docker ignores
 **/docker-compose.override.yml
 
@@ -40,21 +48,15 @@ publish/
 
 # Test-related files
 sample-input.csv
-
-node_modules
-dist
-dist-ssr
-*.local
-.eslintcache
-.vite
+workin-input.csv
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
 .idea
 .DS_Store
 *.ntvs*
 *.njsproj
 *.sw?
+
 # Other files
 desktop.ini
+*.rar

@@ -11,7 +11,6 @@ using IWKits.Api.Settings;
 using IWKits.Api.Database;
 using IWKits.Api.Services;
 using MongoDB.Driver;
-using Microsoft.Extensions.Caching.Memory;
 
 // Main content of the file
 public static class IWKitsApi
@@ -75,9 +74,12 @@ public static class IWKitsApi
 			string hostname = Utils.GetRequiredEnv("DB_CONNECTION_HOSTNAME");
 			string hostport = Utils.GetRequiredEnv("DB_CONNECTION_HOSTPORT");
 
+			// Build connection string parameters string
+			var parameters = $"?authSource={settings.AuthSource}&maxPoolSize={settings.MaxPoolSize}";
+
 			// Create connection string with username, password and hostname variables
 			return new MongoClient(
-				$"mongodb://{username}:{password}@{hostname}:{hostport}/?authSource={settings.AuthSource}"
+				$"mongodb://{username}:{password}@{hostname}:{hostport}/{parameters}"
 			);
 		});
 
@@ -109,29 +111,19 @@ public static class IWKitsApi
 		});
 
 		// Add other singleton services
-		srv.AddSingleton<ITaxApplierService>((sr) =>
+		srv.AddSingleton<IOrderProcessService, OrderProcessService>();
+		srv.AddSingleton<IGeoLocationService, GeoLocationService>();
+
+		srv.AddSingleton<ITaxApplierService>((sp) =>
 		{
-			var settings = sr.GetRequiredService<IOptions<ServiceSettings>>().Value;
+			var settings = sp.GetRequiredService<IOptions<ServiceSettings>>().Value;
 
 			return ( settings.TaxApplier == "fake" ) ? new TaxApplierFakeService()
 				: new TaxApplierService();
 		});
 
-		srv.AddSingleton<IGeoLocationService>((sr) =>
-		{
-			var coreDatabase = sr.GetRequiredService<CoreDatabaseContext>();
-			var memoryCache = sr.GetRequiredService<IMemoryCache>();
-
-			return new GeoLocationService(coreDatabase, memoryCache);
-		});
-
-		srv.AddSingleton<IOrderProcessService>((sr) =>
-		{
-			var geoLocation = sr.GetRequiredService<IGeoLocationService>();
-			var taxApplier = sr.GetRequiredService<ITaxApplierService>();
-
-			return new OrderProcessService(geoLocation, taxApplier);
-		});
+		// Add hosted services
+		srv.AddHostedService<GeoLocationCacheWarmupService>();
 	}
 
 

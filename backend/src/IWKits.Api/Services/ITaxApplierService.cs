@@ -8,7 +8,7 @@ public interface ITaxApplierService
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZip, decimal subtotal);
+	TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZone, decimal subtotal);
 
 	// ------------------------------------------------------------------------------------------------------<
 }

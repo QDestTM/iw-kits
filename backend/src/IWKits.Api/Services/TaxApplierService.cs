@@ -10,13 +10,13 @@ public sealed class TaxApplierService : ITaxApplierService
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
-	public TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZip, decimal subtotal)
+	public TaxApplyResult Apply(TaxRateInfo taxRate, GeoZoneInfo geoZone, decimal subtotal)
 	{
-		if ( taxRate.ZipCode != geoZip.ZipCode )
+		if ( taxRate.ZipCode != geoZone.ZipCode )
 		{
 			return TaxApplyResult.Failure(
 				$"Zip codes is not match: {nameof(TaxRateInfo)}({taxRate.ZipCode})" +
-				$"and {nameof(GeoZoneInfo)}({geoZip.ZipCode})");
+				$"and {nameof(GeoZoneInfoFull)}({geoZone.ZipCode})");
 		}
 
 		// Create breakdown from the estimated tax rates
@@ -38,9 +38,9 @@ public sealed class TaxApplierService : ITaxApplierService
 		// Create list of jurisdictions by using names in geo zip info
 		var jurisdictions = new List<TaxJurisdiction>(capacity: 4);
 
-		AddIfHasRate(jurisdictions, breakdown.StateRate,   "state",   geoZip.StateName  );
-		AddIfHasRate(jurisdictions, breakdown.CountyRate,  "county",  geoZip.CountyName );
-		AddIfHasRate(jurisdictions, breakdown.CityRate,    "city",    geoZip.CityName   );
+		AddIfHasRate(jurisdictions, breakdown.StateRate,   "state",   geoZone.StateName  );
+		AddIfHasRate(jurisdictions, breakdown.CountyRate,  "county",  geoZone.CountyName );
+		AddIfHasRate(jurisdictions, breakdown.CityRate,    "city",    geoZone.CityName   );
 		AddIfHasRate(jurisdictions, breakdown.SpecialRate, "special", "Special District");
 
 		// Combine all calculated data into tax info

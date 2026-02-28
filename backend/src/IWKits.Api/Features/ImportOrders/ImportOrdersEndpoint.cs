@@ -14,11 +14,16 @@ using IWKits.Api.Services;
 using IWKits.Api.Database;
 using IWKits.Api.Settings;
 using System.Threading;
+using MongoDB.Driver;
+using System.Linq;
 using System.IO;
 using CsvHelper;
+using System.Diagnostics;
 using System;
 
 // Main content of the file
+
+
 public static class ImportOrdersEndpoint
 {
 	public const string Endpoint = "orders/import";
@@ -48,49 +53,49 @@ public static class ImportOrdersEndpoint
 			return Results.BadRequest("File is empty or missing.");
 		}
 
-		// Get size of batch for importing
-		int importBatchSize = constraints.Value.ImportBatchSize;
+		// Get chunk size from the options constrains section
+		int importChunkSize = constraints.Value.ImportChunkSize;
 
-		// Variable to count imported records in total
+		// Allow unordered insertion to speed up insertion process
+		var insertOptions = new InsertManyOptions() { IsOrdered = false };
+
+		// List for errors and total imports counter
+		var errors = new List<string>();
 		int importedTotal = 0;
-
-		// Lists to store imported orders and errors
-		var imported = new List<OrderInfo>();
-		var errors   = new List<string>   ();
 
 		// Create file reader and use it to create csv reader instance
 		using var reader = new StreamReader( file.OpenReadStream() );
 		using var csv    = new CsvReader(reader, CultureInfo.InvariantCulture);
 
 		// Read record from csv file line by line using asyncronouns reader
-		var asyncOrdersReader = csv.GetRecordsAsync<RawOrderInfo>(ct);
+		var chunks = csv.GetRecordsAsync<RawOrderInfo>(ct).Chunk(importChunkSize);
+		var options = new ParallelOptions() { CancellationToken = ct, MaxDegreeOfParallelism = 2 };
 
-		await foreach ( var rawOrder in asyncOrdersReader )
+		await Parallel.ForEachAsync(chunks, options, async (chunk, token) =>
 		{
-			var processResult = await orderProcess.ProcessAsync(rawOrder);
+			var tasks = chunk.Select(orderProcess.ProcessAsync);
+			var toInsert = new List<OrderInfo>(importChunkSize);
 
-			// Store message for error that may occur at processing
-			if ( processResult.HasError )
+			// Filter results for error message and order infos
+			foreach (var result in await Task.WhenAll(tasks))
 			{
-				errors.Add(processResult.ErrorMessage); continue;
+				if ( result.HasError )
+				{
+					errors.Add(result.ErrorMessage);
+				}
+				else
+				{
+					toInsert.Add(result.OrderInfo);
+				}
 			}
 
-			// Store order to the list and increase counter
-			imported.Add(processResult.OrderInfo); importedTotal++;
-
-			// Store orders when batch if filled
-			if ( imported.Count >= importBatchSize )
+			// Insert orders and atomicaly increase total counter
+			if ( toInsert.Count > 0 )
 			{
-				await dataDatabase.Orders.InsertManyAsync(imported, null, ct);
-				imported.Clear();
+				await dataDatabase.Orders.InsertManyAsync(toInsert, insertOptions, token);
+				Interlocked.Add(ref importedTotal, toInsert.Count);
 			}
-		}
-
-		// Store orders that can remain in imported
-		if ( imported.Count != 0 )
-		{
-			await dataDatabase.Orders.InsertManyAsync(imported, null, ct);
-		}
+		});
 
 		// Send respond with results to the client
 		var respond = new ImportOrdersRespond(importedTotal, errors);

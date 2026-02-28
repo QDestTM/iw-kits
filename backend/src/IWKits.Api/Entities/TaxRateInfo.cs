@@ -6,15 +6,12 @@ using MongoDB.Bson;
 
 // Main content of the file
 [BsonIgnoreExtraElements]
-public sealed record TaxRateInfo
+public record TaxRateInfo
 {
 	// ^ ----------------------------------------------------------------------------------------------------<
 
 	[BsonElement("zip_code")]
 	public int ZipCode { get; init; } = int.MaxValue;
-
-	[BsonElement("state_id")]
-	public string StateId { get; init; } = string.Empty;
 
 	[BsonElement("state_rate")]
 	[BsonRepresentation(BsonType.Decimal128)]

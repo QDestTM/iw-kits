@@ -1,7 +1,7 @@
 namespace IWKits.Api.Services;
 
 // Namespaces used by this file
-using MongoDB.Driver.GeoJsonObjectModel;
+using NetTopologySuite.Geometries;
 using System.Threading.Tasks;
 using IWKits.Api.Entities;
 using System;
@@ -26,7 +26,7 @@ public sealed class OrderProcessService : IOrderProcessService
 
 	public async Task<OrderProcessResult> ProcessAsync(RawOrderInfo rawOrder)
 	{
-		var coordinates = GeoJson.Geographic(rawOrder.Longitude, rawOrder.Latitude);
+		var coordinates = new Point(rawOrder.Longitude, rawOrder.Latitude);
 		var ordId = rawOrder.Id;
 
 		// Find closest service area from the provided coordinates
