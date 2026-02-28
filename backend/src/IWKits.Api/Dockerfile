@@ -1,8 +1,12 @@
+ARG SRC_PATH=/backend/src/IWKits.Api
+
 # STAGE 1 - Builder
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+ARG SRC_PATH
 WORKDIR /src
 
-COPY /backend/src/IWKits.Api ./backend/src/IWKits.Api/
+COPY /${SRC_PATH} ./${SRC_PATH}/
 COPY *.sln .
 
 RUN dotnet restore

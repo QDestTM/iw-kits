@@ -3,7 +3,7 @@ services:
     container_name: iw-kits-web
     hostname: iw-kits-web
 
-    image: ghcr.io/pvashkiv/iw-kits-web:v1
+    image: docker.io/iw-kits/web:latest
 
     networks:
       - iw-kits-network
