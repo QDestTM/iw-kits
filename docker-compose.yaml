@@ -1,4 +1,17 @@
 services:
+  iw-kits-web:
+    container_name: iw-kits-web
+    hostname: iw-kits-web
+
+    image: ghcr.io/pvashkiv/iw-kits-web:v1
+
+    networks:
+      - iw-kits-network
+    depends_on:
+      - iw-kits-api
+    ports:
+      - "25000:80"
+
   iw-kits-api:
     container_name: iw-kits-api
     hostname: iw-kits-api
