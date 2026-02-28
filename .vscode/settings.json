@@ -111,5 +111,59 @@
 			"color": "foldercolorizer.color_0099cc",
 			"badge": "☰"
 		},
+		{
+			"folderPath": "IWKits.Client\\Dockerfile\\",
+			"color": "foldercolorizer.color_0099cc",
+			"badge": "☰"
+		},
+		{
+			"folderPath": "IWKits\\README.md\\",
+			"color": "foldercolorizer.color_cccc66",
+			"badge": "༶"
+		},
+		{
+			"folderPath": "package.json\\",
+			"color": "foldercolorizer.color_339999"
+		},
+		{
+			"folderPath": "IWKits.Client",
+			"color": "foldercolorizer.color_00cc99",
+			"badge": "👁"
+		},
+		{
+			"folderPath": "IWKits.Client\\package-lock.json\\",
+			"color": "foldercolorizer.color_cc3366",
+			"badge": "⍽"
+		},
+		{
+			"folderPath": "IWKits.Client\\package.json\\",
+			"color": "foldercolorizer.color_cc3366",
+			"badge": "⍽"
+		},
+		{
+			"folderPath": "IWKits.Client\\nginx.conf\\",
+			"color": "foldercolorizer.color_336666",
+			"badge": "η"
+		},
+		{
+			"folderPath": "IWKits.Client\\eslint.config.js\\",
+			"color": "foldercolorizer.color_6666cc",
+			"badge": "⫐"
+		},
+		{
+			"folderPath": "IWKits.Client\\index.html\\",
+			"color": "foldercolorizer.color_cc6666",
+			"badge": "α"
+		},
+		{
+			"folderPath": "IWKits.Client\\tsconfig.json\\",
+			"color": "foldercolorizer.color_006699",
+			"badge": "⩀"
+		},
+		{
+			"folderPath": "IWKits.Client\\vite.config.js\\",
+			"color": "foldercolorizer.color_666699",
+			"badge": "🜉"
+		}
 	]
 }
