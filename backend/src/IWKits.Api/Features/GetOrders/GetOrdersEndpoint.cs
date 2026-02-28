@@ -1,6 +1,7 @@
 namespace IWKits.Api.Features.GetOrders;
 
 // Namespaces used by this file
+using Microsoft.AspNetCore.Authorization;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Routing;
@@ -33,6 +34,7 @@ public static class GetOrdersEndpoint
 	public static void MapGetOrdersEndpoint(this IEndpointRouteBuilder builder)
 	{
 		builder.MapGet(Endpoint, GetOrdersHandlerAsync)
+			.RequireAuthorization(new AuthorizeAttribute { Roles = "admin" })
 			.Produces<GetOrdersRespond>(200)
 			.WithName("GetOrders");
 	}

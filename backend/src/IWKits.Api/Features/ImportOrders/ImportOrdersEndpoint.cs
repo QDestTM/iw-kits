@@ -1,6 +1,7 @@
 namespace IWKits.Api.Features.ImportOrders;
 
 // Namespaces used by this file
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
@@ -18,12 +19,8 @@ using MongoDB.Driver;
 using System.Linq;
 using System.IO;
 using CsvHelper;
-using System.Diagnostics;
-using System;
 
 // Main content of the file
-
-
 public static class ImportOrdersEndpoint
 {
 	public const string Endpoint = "orders/import";
@@ -33,6 +30,7 @@ public static class ImportOrdersEndpoint
 	public static void MapImportOrdersEndpoint(this IEndpointRouteBuilder builder)
 	{
 		builder.MapPost(Endpoint, ImportOrdersHandlerAsync).WithName("ImportOrders")
+			.RequireAuthorization(new AuthorizeAttribute { Roles = "admin" })
 			.Accepts<IFormFile>("multipart/form-data")
 			.Produces<ImportOrdersRespond>(200)
 			.Produces(400)
