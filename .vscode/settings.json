@@ -87,6 +87,11 @@
 			"badge": "⌔"
 		},
 		{
+			"folderPath": ".env.example\\",
+			"color": "foldercolorizer.color_cccc66",
+			"badge": "⌔"
+		},
+		{
 			"folderPath": ".env.loc\\",
 			"color": "foldercolorizer.color_cccc66",
 			"badge": "⌔"
