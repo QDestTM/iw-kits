@@ -10,6 +10,8 @@ public sealed class AuthDatabaseContext : DatabaseContext
 	// ^ ----------------------------------------------------------------------------------------------------<
 
 	// Public instance properties
+	public IMongoCollection<SessionInfo> Sessions => database.GetCollection<SessionInfo>("sessions");
+
 	public IMongoCollection<UserInfo> Users => database.GetCollection<UserInfo>("users");
 
 	// Public instance constructors
