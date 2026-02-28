@@ -63,6 +63,16 @@ public static class IWKitsApi
 			.ValidateDataAnnotations()
 			.ValidateOnStart();
 
+		srv.AddOptions<SecuritySettings>()
+			.Bind( cfg.GetSection(SecuritySettings.SectionName) )
+			.ValidateDataAnnotations()
+			.ValidateOnStart();
+
+		srv.AddOptions<SessionSettings>()
+			.Bind( cfg.GetSection(SessionSettings.SectionName) )
+			.ValidateDataAnnotations()
+			.ValidateOnStart();
+
 		// Add database-related services
 		srv.AddSingleton<IMongoClient>((sp) =>
 		{
@@ -122,6 +132,24 @@ public static class IWKitsApi
 				: new TaxApplierService();
 		});
 
+		srv.AddSingleton<ISecurityService>((sp) =>
+		{
+			var securitySettings = sp.GetRequiredService<IOptions<SecuritySettings>>().Value;
+			var sessionSettings = sp.GetRequiredService<IOptions<SessionSettings>>().Value;
+			var jwtKey = Utils.GetRequiredEnv("JWT_KEY");
+
+			return new SecurityService(securitySettings, sessionSettings, jwtKey);
+		});
+
+		srv.AddSingleton<ISessionService>((sp) =>
+		{
+			var settings = sp.GetRequiredService<IOptions<SessionSettings>>().Value;
+			var securityService = sp.GetRequiredService<ISecurityService>();
+			var authDatabase = sp.GetRequiredService<AuthDatabaseContext>();
+
+			return new SessionService(securityService, settings, authDatabase);
+		});
+
 		// Add hosted services
 		srv.AddHostedService<GeoLocationCacheWarmupService>();
 	}
@@ -130,6 +158,10 @@ public static class IWKitsApi
 	private static void MapApplicationEndpoints(this WebApplication application)
 	{
 		var apiV1 = application.MapGroup("api/v1");
+
+		Features.AuthRegister.AuthRegisterEndpoint.MapAuthRegisterEndpoint(apiV1);
+		Features.AuthRefresh.AuthRefreshEndpoint.MapAuthRefreshEndpoint(apiV1);
+		Features.AuthLogin.AuthLoginEndpoint.MapAuthLoginEndpoint(apiV1);
 
 		Features.CreateOrder.CreateOrderEndpoint.MapCreateOrderEndpoint(apiV1);
 		Features.GetOrders.GetOrdersEndpoint.MapGetOrdersEndpoint(apiV1);
