@@ -5,19 +5,17 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Obsidian ignores
+.obsidian/**
+
+# MongoDB ignores
+mongodb/**
+
 # Environment ignores
 .env
 .env.*
 !.env.example
-
-# Node/Next.js ignores
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/dist/
-frontend/.turbo/
-frontend/coverage/
-frontend/.eslintcache
+!.env.dev
 
 # Api ignores
 backend/**/bin/
@@ -29,6 +27,14 @@ backend/**/*.cache
 backend/**/*.pdb
 backend/.vs/
 
+# Frontend ignores
+node_modules
+dist
+dist-ssr
+*.local
+.eslintcache
+.vite
+
 # Docker ignores
 **/docker-compose.override.yml
 
@@ -39,3 +45,19 @@ coverage/
 
 # Publish output
 publish/
+
+# Test-related files
+sample-input.csv
+workin-input.csv
+
+# Editor directories and files
+.idea
+.DS_Store
+*.ntvs*
+*.njsproj
+*.sw?
+
+# Other files
+desktop.ini
+mongodb.rar
+mongodb.zip
