@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using IWKits.Api.Services;
 using System.Threading;
+using FluentValidation;
 
 // Main content of the file
 public static class AuthRefreshEndpoint
@@ -28,10 +29,20 @@ public static class AuthRefreshEndpoint
 
 	private static async Task<IResult> AuthRefreshHandlerAsync
 	(
+		[FromServices] IValidator<AuthRefreshRequest> validator,
 		[FromServices] ISessionService sessionService,
 		[FromBody] AuthRefreshRequest request,
 		CancellationToken ct)
 	{
+		var validationResult = await validator.ValidateAsync(request, ct);
+		var errorMessage = validationResult.JoinErrorsOrEmpty();
+
+		if ( !string.IsNullOrEmpty(errorMessage) )
+		{
+			var respond = new AuthRefreshRespond(null, null, errorMessage);
+			return Results.BadRequest(respond);
+		}
+
 		var refreshResult = await sessionService.RefreshSessionAsync(request.RefreshToken, ct);
 
 		// Return error from result as response if presented

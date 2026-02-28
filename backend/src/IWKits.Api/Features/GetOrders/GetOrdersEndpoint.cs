@@ -48,7 +48,6 @@ public static class GetOrdersEndpoint
 		[AsParameters] GetOrdersQuery query,
 		HttpContext httpContext, CancellationToken ct)
 	{
-		// TODO: Options validation
 		var options = query.CreateOptions(constraints);
 		var filter = options.CreateFilterDefinition();
 
