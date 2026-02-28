@@ -28,7 +28,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const accessToken = localStorage.getItem('access_token');
 
         if (storedUser && accessToken) {
-            setUser(JSON.parse(storedUser) as AuthUser);
+            const parsedUser = JSON.parse(storedUser) as AuthUser;
+            if (parsedUser.role === 'admin') {
+                setUser(parsedUser);
+            } else {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+            }
         }
         setLoading(false);
     }, []);
@@ -39,6 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (response.error_message) {
                 return response.error_message;
+            }
+
+            if (!response.user || response.user.role !== 'admin') {
+                return 'Only admin users are allowed to access this application';
             }
 
             if (response.access_token && response.refresh_token && response.user) {
