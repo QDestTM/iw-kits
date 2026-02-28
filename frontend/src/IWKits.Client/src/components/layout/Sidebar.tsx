@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { ShoppingCartOutlined, LogoutOutlined } from '@ant-design/icons';
+import { ShoppingCartOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Layout, Menu } from 'antd';
-import { Link, useLocation } from 'react-router-dom';
-import {Logo} from "./Logo.js";
+import { Layout, Menu, Typography } from 'antd';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Logo } from './Logo.js';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const { Sider } = Layout;
+const { Text } = Typography;
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -20,15 +22,19 @@ const getItems = (onLogout: () => void): MenuItem[] => [
     label: 'Logout',
     onClick: onLogout,
     icon: <LogoutOutlined />,
+    danger: true,
   },
 ];
 
 export const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    alert('Тут буде логіка виходу');
+    logout();
+    navigate('/auth');
   };
 
   return (
@@ -45,6 +51,13 @@ export const Sidebar = () => {
       }}
     >
       <Logo collapsed={collapsed} />
+
+      {!collapsed && user && (
+        <div style={{ padding: '0 16px 12px', textAlign: 'center' }}>
+          <UserOutlined style={{ color: '#fff', marginRight: 6 }} />
+          <Text style={{ color: '#ffffffa6', fontSize: 13 }}>{user.username}</Text>
+        </div>
+      )}
 
       <Menu
         theme="dark"

@@ -30,6 +30,9 @@ export function OrdersToolbar({ showFilters, onToggleFilters, onCreateClick, onR
                         name="file"
                         action={ordersApi.getImportUrl()}
                         showUploadList={false}
+                        headers={{
+                            Authorization: `Bearer ${localStorage.getItem('access_token') ?? ''}`,
+                        }}
                         onChange={(info) => {
                             if (info.file.status === 'done') {
                                 void message.success(`Import successful: ${info.file.response?.imported_total || 0} orders imported`);

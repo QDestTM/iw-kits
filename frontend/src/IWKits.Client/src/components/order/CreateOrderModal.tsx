@@ -25,7 +25,8 @@ export default function CreateOrderModal({ isOpen, onClose, onSuccess }: CreateO
       onSuccess();
     } catch (error) {
       console.error("POST Error:", error);
-      message.error('Failed to create order.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create order.';
+      message.error(errorMessage);
     }
   };
 
