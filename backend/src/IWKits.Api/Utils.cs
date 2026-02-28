@@ -1,6 +1,9 @@
 namespace IWKits.Api;
 
 // Namespaces used by this file
+using System.Collections.Generic;
+using FluentValidation.Results;
+using System.Linq;
 using System;
 
 // Main content of the file
@@ -19,6 +22,13 @@ public static class Utils
 			$"Critical error: '{key}' environment variable is missing. " +
 			"Check your .env file or environment settings."
 		);
+	}
+
+
+	public static string JoinErrorsOrEmpty(this ValidationResult? result)
+	{
+		if ( result is null || result.IsValid ) return string.Empty;
+		return string.Join('\n', result.Errors.Select(e => e.ErrorMessage));
 	}
 
 	// ------------------------------------------------------------------------------------------------------<

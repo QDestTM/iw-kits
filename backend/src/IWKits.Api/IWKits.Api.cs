@@ -3,6 +3,7 @@ namespace IWKits.Api;
 // Namespaces used by this file
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
@@ -11,8 +12,8 @@ using System.Threading.Tasks;
 using IWKits.Api.Settings;
 using IWKits.Api.Database;
 using IWKits.Api.Services;
+using FluentValidation;
 using MongoDB.Driver;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 // Main content of the file
@@ -50,6 +51,16 @@ public static class IWKitsApi
 		srv.AddEndpointsApiExplorer();
 		srv.AddMemoryCache();
 		srv.AddSwaggerGen();
+
+		// Register validator services
+		builder.Services.AddValidatorsFromAssemblyContaining
+			<Features.AuthLogin.AuthLoginRequestValidator>();
+		builder.Services.AddValidatorsFromAssemblyContaining
+			<Features.AuthRefresh.AuthRefreshRequestValidator>();
+		builder.Services.AddValidatorsFromAssemblyContaining
+			<Features.AuthRegister.AuthRegisterRequestValidator>();
+		builder.Services.AddValidatorsFromAssemblyContaining
+			<Features.CreateOrder.CreateOrderRequestValidator>();
 
 		// Add authorization related services
 		builder.Services

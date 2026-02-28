@@ -12,6 +12,7 @@ using IWKits.Api.Services;
 using IWKits.Api.Entities;
 using IWKits.Api.Settings;
 using System.Threading;
+using FluentValidation;
 using MongoDB.Driver;
 using System;
 
@@ -35,12 +36,23 @@ public static class AuthRegisterEndpoint
 	private static async Task<IResult> AuthRegisterHandlerAsync
 	(
 		[FromServices] IOptions<SecuritySettings> securitySettings,
+		[FromServices] IValidator<AuthRegisterRequest> validator,
 		[FromServices] AuthDatabaseContext authDatabase,
 		[FromServices] ISecurityService securityService,
 		[FromServices] ISessionService sessionService,
 		[FromBody] AuthRegisterRequest request,
 		CancellationToken ct)
 	{
+		var validationResult = await validator.ValidateAsync(request, ct);
+		var errorMessage = validationResult.JoinErrorsOrEmpty();
+
+		if ( !string.IsNullOrEmpty(errorMessage) )
+		{
+			var respond = new AuthRegisterRespond(null, null, null, errorMessage);
+			return Results.BadRequest(respond);
+		}
+
+		// Use filter to find if requester user exists in registered users database
 		var filter = Builders<UserInfo>.Filter.Eq(x => x.Username, request.Username);
 		var userExists = await authDatabase.Users.Find(filter).AnyAsync(ct);
 

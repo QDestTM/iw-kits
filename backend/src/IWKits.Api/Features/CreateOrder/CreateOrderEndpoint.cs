@@ -11,6 +11,7 @@ using IWKits.Api.Entities;
 using IWKits.Api.Services;
 using IWKits.Api.Database;
 using System.Threading;
+using FluentValidation;
 using System;
 
 // Main content of the file
@@ -32,12 +33,20 @@ public static class CreateOrderEndpoint
 
 	private static async Task<IResult> CreateOrderHandlerAsync
 	(
+		[FromServices] IValidator<CreateOrderRequest> validator,
 		[FromServices] IOrderProcessService orderProcess,
 		[FromServices] DataDatabaseContext dataDatabase,
 		[FromBody] CreateOrderRequest request,
 		HttpContext httpContext, CancellationToken ct)
 	{
-		// TODO: Request input validation
+		var validationResult = await validator.ValidateAsync(request, ct);
+		var errorMessage = validationResult.JoinErrorsOrEmpty();
+
+		if ( !string.IsNullOrEmpty(errorMessage) )
+		{
+			var respond = new CreateOrderRespond(null, errorMessage);
+			return Results.BadRequest(respond);
+		}
 
 		// Calculate tax info to include it into the new order info
 		var rawOrderInfo = new RawOrderInfo()
